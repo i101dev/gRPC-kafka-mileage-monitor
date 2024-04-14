@@ -11,8 +11,7 @@ import (
 )
 
 const wsEndpoint = "ws://localhost:30000/ws"
-
-var sendInterval = time.Second
+const sendInterval = time.Second
 
 func main() {
 
