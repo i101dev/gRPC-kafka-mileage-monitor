@@ -15,10 +15,10 @@ type DataConsumer interface {
 }
 
 type KafkaConsumer struct {
-	consumer    *kafka.Consumer
 	isRunning   bool
-	calcService CalculatorServicer
+	consumer    *kafka.Consumer
 	aggClient   *client.Client
+	calcService CalculatorServicer
 }
 
 func NewKafkaConsumer(topic string, svc CalculatorServicer, ac *client.Client) (*KafkaConsumer, error) {
@@ -81,7 +81,7 @@ func (c *KafkaConsumer) readMessageLoop() {
 		}
 
 		if err := c.aggClient.AggregateInvoice(req); err != nil {
-			logrus.Errorf("aggregate error:", err)
+			logrus.Error("aggregate error:", err)
 			continue
 		}
 	}

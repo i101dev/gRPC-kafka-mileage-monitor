@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/microservices/types"
 )
 
@@ -15,10 +17,17 @@ func NewMemoryStore() *MemoryStore {
 }
 
 func (m *MemoryStore) Insert(d types.Distance) error {
-	// fmt.Println("inserting distance data to storage")
-	// return nil
-
 	m.data[d.OBUID] += d.Value
-
 	return nil
+}
+
+func (m *MemoryStore) Get(id int) (float64, error) {
+
+	dist, ok := m.data[id]
+
+	if !ok {
+		return 0.0, fmt.Errorf("bad id - %d", id)
+	}
+
+	return dist, nil
 }

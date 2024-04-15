@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/microservices/types"
 )
@@ -30,7 +31,37 @@ func main() {
 func makeHTTPTransport(listenAddr string, agg Aggregator) {
 	fmt.Println("HTTP transport running on port", listenAddr)
 	http.HandleFunc("/aggregate", handleAggregate(agg))
+	http.HandleFunc("/invoice", handleGetInvoice(agg))
 	http.ListenAndServe(listenAddr, nil)
+}
+
+func handleGetInvoice(agg Aggregator) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		values, ok := r.URL.Query()["obu"]
+
+		if !ok {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing <obuID>"})
+			return
+		}
+
+		obuID, err := strconv.Atoi(values[0])
+
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid <obuID>"})
+			return
+		}
+
+		invoice, err := agg.CalculateInvoice(obuID)
+
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to generate invoice"})
+			return
+		}
+
+		writeJSON(w, http.StatusOK, invoice)
+	}
 }
 
 func handleAggregate(agg Aggregator) http.HandlerFunc {
