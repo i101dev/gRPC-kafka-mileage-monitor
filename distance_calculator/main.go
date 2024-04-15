@@ -3,9 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
+
+	"github.com/microservices/aggregator/client"
 )
 
-const kafkaTopic = "obudata"
+const (
+	kafkaTopic         = "obudata"
+	aggregatorEndPoint = "http://127.0.0.1:3000/aggregate"
+)
 
 func main() {
 
@@ -17,7 +22,9 @@ func main() {
 	svc = NewCalculatorService()
 	svc = NewLogMiddleware(svc)
 
-	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc)
+	client := client.NewClient(aggregatorEndPoint)
+
+	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc, client)
 
 	if err != nil {
 		log.Fatal(err)
