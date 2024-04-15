@@ -11,7 +11,7 @@ import (
 )
 
 const wsEndpoint = "ws://localhost:30000/ws"
-const sendInterval = time.Second
+const sendInterval = time.Second * 5
 
 func main() {
 
@@ -34,8 +34,6 @@ func main() {
 				Lat:   lat,
 				Long:  long,
 			}
-
-			// fmt.Printf("%+v\n", data)
 
 			if err := conn.WriteJSON(data); err != nil {
 				log.Fatal(err)
