@@ -22,7 +22,7 @@ func main() {
 	svc = NewCalculatorService()
 	svc = NewLogMiddleware(svc)
 
-	client := client.NewClient(aggregatorEndPoint)
+	client := client.NewHTTPClient(aggregatorEndPoint)
 
 	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc, client)
 

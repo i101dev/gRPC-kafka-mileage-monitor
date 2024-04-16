@@ -4,15 +4,19 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"strconv"
 
 	"github.com/microservices/types"
+	"google.golang.org/grpc"
 )
 
 func main() {
 
-	listenAddr := flag.String("listenaddr", ":3000", "this listen addr of the HTTP server")
+	httpAddr := flag.String("httpAddr", ":3000", "this listen addr of the HTTP server")
+	grpcAddr := flag.String("grpcAddr", ":3001", "this listen addr of the GRPC server")
 
 	flag.Parse()
 
@@ -23,16 +27,37 @@ func main() {
 
 	agg = NewLogMiddleware(agg)
 
-	makeHTTPTransport(*listenAddr, agg)
+	go func() {
+		log.Fatal(makeGRPCTransport(*grpcAddr, agg))
+	}()
 
-	fmt.Println("invoicer is online and working fine!")
+	log.Fatal(makeHTTPTransport(*httpAddr, agg))
 }
 
-func makeHTTPTransport(listenAddr string, agg Aggregator) {
+func makeGRPCTransport(listenAddr string, svc Aggregator) error {
+
+	fmt.Println("GRPC transport running on port", listenAddr)
+
+	ln, err := net.Listen("tcp", listenAddr)
+
+	if err != nil {
+		return err
+	}
+
+	defer ln.Close()
+
+	server := grpc.NewServer([]grpc.ServerOption{}...)
+
+	types.RegisterAggregatorServer(server, NewAggregatorGRPCServer(svc))
+
+	return server.Serve(ln)
+}
+
+func makeHTTPTransport(listenAddr string, agg Aggregator) error {
 	fmt.Println("HTTP transport running on port", listenAddr)
 	http.HandleFunc("/aggregate", handleAggregate(agg))
 	http.HandleFunc("/invoice", handleGetInvoice(agg))
-	http.ListenAndServe(listenAddr, nil)
+	return http.ListenAndServe(listenAddr, nil)
 }
 
 func handleGetInvoice(agg Aggregator) http.HandlerFunc {
