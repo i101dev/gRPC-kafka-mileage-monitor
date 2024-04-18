@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -17,11 +18,13 @@ type DataConsumer interface {
 type KafkaConsumer struct {
 	isRunning   bool
 	consumer    *kafka.Consumer
-	aggClient   *client.HTTPClient
+	aggClient   client.Client
 	calcService CalculatorServicer
 }
 
-func NewKafkaConsumer(topic string, svc CalculatorServicer, ac *client.HTTPClient) (*KafkaConsumer, error) {
+func NewKafkaConsumer(topic string, svc CalculatorServicer, ac client.Client) (*KafkaConsumer, error) {
+
+	// fmt.Println("\n*** >>> [topic] -", topic)
 
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "localhost",
@@ -43,8 +46,7 @@ func NewKafkaConsumer(topic string, svc CalculatorServicer, ac *client.HTTPClien
 }
 
 func (c *KafkaConsumer) Start() {
-	logrus.Info("\n*** >>> kafka transport started")
-
+	// logrus.Info("\n*** >>> kafka transport started")
 	c.isRunning = true
 	c.readMessageLoop()
 }
@@ -54,6 +56,8 @@ func (c *KafkaConsumer) readMessageLoop() {
 	for c.isRunning {
 
 		msg, err := c.consumer.ReadMessage(-1)
+
+		// logrus.Info("\n*** >>> [readMessageLoop] -", msg)
 
 		if err != nil {
 			logrus.Errorf("\n*** >>> kafka consume error -- %s", err)
@@ -74,13 +78,13 @@ func (c *KafkaConsumer) readMessageLoop() {
 			continue
 		}
 
-		req := types.Distance{
+		req := &types.AggregateRequest{
 			Unix:  time.Now().UnixNano(),
-			OBUID: data.OBUID,
+			ObuID: int32(data.OBUID),
 			Value: distance,
 		}
 
-		if err := c.aggClient.AggregateInvoice(req); err != nil {
+		if err := c.aggClient.Aggregate(context.Background(), req); err != nil {
 			logrus.Error("\n*** >>> aggregate error:", err)
 			continue
 		}

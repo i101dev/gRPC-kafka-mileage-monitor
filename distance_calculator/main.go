@@ -9,7 +9,7 @@ import (
 
 const (
 	kafkaTopic         = "obudata"
-	aggregatorEndPoint = "http://127.0.0.1:3000/aggregate"
+	aggregatorEndPoint = "http://127.0.0.1:3000"
 )
 
 func main() {
@@ -22,12 +22,17 @@ func main() {
 	svc = NewCalculatorService()
 	svc = NewLogMiddleware(svc)
 
-	client := client.NewHTTPClient(aggregatorEndPoint)
+	httpClient := client.NewHTTPClient(aggregatorEndPoint)
+	// grpcClient, err := client.NewGRPCClient(aggregatorEndPoint)
 
-	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc, client)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc, httpClient)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(`Error chk [0x1] -`, err)
 	}
 
 	kafkaConsumer.Start()

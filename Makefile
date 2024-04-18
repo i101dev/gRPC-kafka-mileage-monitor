@@ -1,6 +1,10 @@
 obu:
 	@go build -o bin/obu ./obu
 	@./bin/obu
+
+gateway:
+	@go build -o bin/gateway gateway/main.go
+	@./bin/gateway
 	
 receiver:
 	@go build -o bin/receiver ./data_receiver
@@ -20,5 +24,11 @@ proto:
 
 .PHONY: obu
 .PHONY: agg
+.PHONY: gateway
 .PHONY: receiver
 .PHONY: calculator
+
+.PHONY: proto
+
+# PATH="${PATH}:${HOME}/go/bin"
+# docker run --name prometheus -d -p 127.0.0.1:9090:9090 prom/prometheus

@@ -22,7 +22,7 @@ func main() {
 
 	log.Print("Check 3")
 
-	if _, err := c.Aggregate(context.TODO(), &types.AggregateRequest{
+	if err := c.Aggregate(context.TODO(), &types.AggregateRequest{
 		ObuID: 1,
 		Value: 2.34,
 		Unix:  time.Now().UnixNano(),
